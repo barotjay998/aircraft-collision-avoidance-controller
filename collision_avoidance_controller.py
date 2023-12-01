@@ -65,7 +65,7 @@ class CollisionAvoidanceController:
     def run_controller(self):
         print("Running controller...")
 
-        print(self.dataset_df.head())
+        # print(self.dataset_df.head())
 
         # TODO: Implement the algorithm here.
         #
@@ -84,19 +84,83 @@ class CollisionAvoidanceController:
     
         self.mark_trajectories()
     
-
+    
     def mark_trajectories(self):
-        # Plot the trajectories of each aircraft using x, y, and z coordinates
-        fig = plt.figure(figsize=(10, 6))
+        self.plot_trajectories_3d()
+        self.plot_trajectories_2d()
+
+
+    def plot_trajectories_3d(self):
+        # Create a 3D plot
+        fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
-        for aircraft_id, group in self.dataset_df.groupby('AircraftID'):
-            ax.plot(group['x'], group['y'], group['z'], label=f'Aircraft {aircraft_id}')
+        # Iterate over each unique AircraftID
+        for aircraft_id in self.dataset_df['AircraftID'].unique():
+            # Filter data for the current aircraft
+            aircraft_data = self.dataset_df[self.dataset_df['AircraftID'] == aircraft_id]
 
-        ax.set_xlabel('X Coordinate (km)')
-        ax.set_ylabel('Y Coordinate (km)')
-        ax.set_zlabel('Z Coordinate (km)')
+            # Plot trajectory
+            ax.plot(aircraft_data['x'], aircraft_data['y'], aircraft_data['z'], label=f'Aircraft {int(aircraft_id)}')
+
+        # Set labels and title
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.set_zlabel('Z Coordinate (Height)')
         ax.set_title('Aircraft Trajectories')
+
+        # Get the maximum absolute values for x and y coordinates
+        max_abs_x = max(abs(coord) for coord in ax.get_xlim())
+        max_abs_y = max(abs(coord) for coord in ax.get_ylim())
+
+        # Set the limits based on the maximum absolute values
+        ax.set_xlim(-max_abs_x, max_abs_x)
+        ax.set_ylim(-max_abs_y, max_abs_y)
+
+        # Show legend
         ax.legend()
 
+        # Show the plot
+        plt.show()
+    
+
+    def plot_trajectories_2d(self):
+        # Create a 2D plot
+        ax = plt.subplot(122)
+
+        # Iterate over each unique AircraftID
+        for aircraft_id in self.dataset_df['AircraftID'].unique():
+            # Filter data for the current aircraft
+            aircraft_data = self.dataset_df[self.dataset_df['AircraftID'] == aircraft_id]
+
+            # Scatter plot with color representing height
+            scatter = ax.scatter(
+                aircraft_data['x'],
+                aircraft_data['y'],
+                c=aircraft_data['z'],
+                cmap='YlOrRd',  # Choose the colormap (Yellow to Orange to Red)
+                label=f'Aircraft {int(aircraft_id)}',
+                linewidth=0.5
+            )
+
+        # Set labels and title
+        ax.set_xlabel('X Coordinate')
+        ax.set_ylabel('Y Coordinate')
+        ax.set_title('Aircraft Trajectories in 2D with Z-coordinate (Height) Color')
+
+        max_abs_x = max(abs(coord) for coord in ax.get_xlim())
+        max_abs_y = max(abs(coord) for coord in ax.get_ylim())
+
+        # Set x=0, y=0 at the center of the x, y plane
+        # ax.set_xlim(-max_abs_x, max_abs_x)
+        # ax.set_ylim(-max_abs_y, max_abs_y)
+
+        ax.set_xlim(-6, 6)  # Adjust as needed
+        ax.set_ylim(-6, 6)  # Adjust as needed
+        ax.set_aspect('equal')
+
+        # Add colorbar
+        cbar = plt.colorbar(scatter, ax=ax, label='Z Coordinate (Height)')
+
+        # Show the plot
         plt.show()
