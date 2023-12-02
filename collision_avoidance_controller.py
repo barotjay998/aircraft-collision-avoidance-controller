@@ -185,7 +185,6 @@ class CollisionAvoidanceController:
                 self.collisions = pd.concat([self.collisions, same_coordinates_df], ignore_index=True)
                 print("------------------------------------------------------------------------------")
                 print("\n")
-                break
 
         # Print the number of collisions
         print(f"Total number of collisions: {sum(self.collision_count.values())}")
