@@ -75,8 +75,20 @@ class CollisionAvoidanceController:
         print("Number of unique aircrafts: " + str(len(self.dataset_df['AircraftID'].unique())))
 
         # TODO: Implement the algorithm here.
-        # TODO: Step 1: COLLISIONDETECTION - Collision Risk-Based Cost Map.
+        # Step 1: Collision detection
+        self.trajectory_collision_detection()
+
+        # If there are no collisions, then we are done.
+        # Else, we move to the next step.
+        # TODO: Step 2: Set order : Give priority to the aircrafts.
+        # TODO: Step 3: Initialize airspace.
+        # TODO: Step 4: While not convergent, do iterations.
+        # TODO: Step 4.1: Calculate cost map.
         self.calculate_cost_map()
+
+        # TODO: Step 4.2: Shortest path.
+        # TODO: Step 4.3: Update trajectory.
+        # TODO: Step 5: Issue Advisories to the aircrafts.
 
         print("# Controller finished running")
 
@@ -85,12 +97,7 @@ class CollisionAvoidanceController:
     This method calculates the cost map based on the collision risk of the aircrafts in the area
     """
     def calculate_cost_map(self):
-        
-        # Plot trajectories
-        # self.mark_trajectories(self.dataset_df)
-        
-        # Find collisions
-        self.trajectory_collision_detection()
+        pass
     
 
     """
@@ -98,6 +105,9 @@ class CollisionAvoidanceController:
     Logic: If two aircrafts have the same coordinates in the same frame, then they are in collision.
     """
     def trajectory_collision_detection(self):
+        
+        # Plot trajectories
+        # self.mark_trajectories(self.dataset_df)
 
         print("Finding collisions")
         # Group data for each unique combination of Frames
