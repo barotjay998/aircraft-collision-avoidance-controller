@@ -137,7 +137,7 @@ class CollisionAvoidanceController:
                 self.collisions_order.loc[index, 'Order'] = frames_to_collision
         
         # Print the collisions_order DataFrame
-        print(self.collisions_order)
+        self.collisions_order = self.collisions_order.sort_values(by='Order')
 
 
     """
