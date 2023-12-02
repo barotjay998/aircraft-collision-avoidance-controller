@@ -104,7 +104,7 @@ class CollisionAvoidanceController:
         grouped_data = self.dataset_df.groupby(['Frame'])
 
         # Iterate over each unique combination of Frames, and then
-        for group_df in grouped_data:
+        for frame, group_df in grouped_data:
             # print(group_df)
             # Find aircrafts with the same x, y, and z coordinates within the same frame
             same_coordinates_df = self.find_same_coordinates(group_df)
