@@ -62,7 +62,7 @@ class CollisionAvoidanceController:
     def __init__(self, dataset_df):
         self.dataset_df = dataset_df
         self.colliding_aircrafts_df = None # Store the trajectories of the colliding aircrafts.
-        self.collisions = pd.DataFrame()
+        self.collisions = pd.DataFrame() # Store the collisions data, only consist of points of collision not the whole trajectory.
         self.collisions_order = None # Store the order of the aircrafts that are going to collide.
         self.precision = 2  # Set the precision for rounding coordinates, for collision detection.
         self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0} # Dictionary to store the number of collisions for each frame.
