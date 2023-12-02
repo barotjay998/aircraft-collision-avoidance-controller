@@ -61,10 +61,12 @@ class CollisionAvoidanceController:
     """
     def __init__(self, dataset_df):
         self.dataset_df = dataset_df
+        self.colliding_aircrafts_df = None # Store the trajectories of the colliding aircrafts.
         self.collisions = pd.DataFrame()
         self.precision = 2  # Set the precision for rounding coordinates, for collision detection.
         self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0} # Dictionary to store the number of collisions for each frame.
     
+
     def run_controller(self):
         print("# Running controller")
 
@@ -77,7 +79,58 @@ class CollisionAvoidanceController:
         self.calculate_cost_map()
 
         print("# Controller finished running")
+
+
+    """
+    This method calculates the cost map based on the collision risk of the aircrafts in the area
+    """
+    def calculate_cost_map(self):
+        
+        # Plot trajectories
+        # self.mark_trajectories(self.dataset_df)
+        
+        # Find collisions
+        self.trajectory_collision_detection()
     
+
+    """
+    This method will find the trajectories of the aircrafts that are going to collide, 
+    Logic: If two aircrafts have the same coordinates in the same frame, then they are in collision.
+    """
+    def trajectory_collision_detection(self):
+
+        print("Finding collisions")
+        # Group data for each unique combination of Frames
+        grouped_data = self.dataset_df.groupby(['Frame'])
+
+        # Iterate over each unique combination of Frames, and then
+        for group_df in grouped_data:
+            # print(group_df)
+            # Find aircrafts with the same x, y, and z coordinates within the same frame
+            same_coordinates_df = self.find_same_coordinates(group_df)
+
+            # Add the found collisions to the collisions DataFrame if there are any
+            if len(same_coordinates_df) > 0:
+                print(same_coordinates_df)
+                self.collisions = pd.concat([self.collisions, same_coordinates_df], ignore_index=True)
+                print("\n")
+
+        # Print the number of collisions
+        print(f"Total number of collisions: {sum(self.collision_count.values())}")
+        for key, value in self.collision_count.items():
+            if value > 0:
+                print(f"{value} occurances of {key} aircrafts collisions.")
+        
+        # Get the full trajectory of the colliding aircrafts
+        # We do that by creating a DataFrame with only rows for colliding aircrafts.
+        self.colliding_aircrafts_df = self.dataset_df[self.dataset_df['AircraftID'].isin(self.collisions['AircraftID'])]
+
+        # Export colliding_aircrafts_df to a text file
+        # self.colliding_aircrafts_df.to_csv('colliding_aircrafts.txt', sep=' ', index=False)
+
+        # Plot trajectories
+        # self.mark_trajectories(self.colliding_aircrafts_df)
+
 
     """
     This method takes a group of aircrafts that exist in the same frame, and finds out which of them
@@ -107,52 +160,7 @@ class CollisionAvoidanceController:
         else:
             # No collisions found
             return pd.DataFrame()
-        
-
-    """
-    This method calculates the cost map based on the collision risk of the aircrafts in the area
-    """
-    def calculate_cost_map(self):
-        
-        # Plot trajectories
-        # self.mark_trajectories(self.dataset_df)
-
-        # Finding collisions
-        print("\n")
-        print("Finding collisions")
-        # Group data for each unique combination of Frames
-        grouped_data = self.dataset_df.groupby(['Frame'])
-
-        # Iterate over each unique combination of Frames, and then
-        # find aircrafts with the same coordinates within the same Frame group.
-        # LOGIC: If two aircrafts have the same coordinates in the same frame, then they are in collision. 
-        for frame, group_df in grouped_data:
-            # print(group_df)
-            # Find aircrafts with the same x, y, and z coordinates within the same frame
-            same_coordinates_df = self.find_same_coordinates(group_df)
-
-            # Add the found collisions to the collisions DataFrame if there are any
-            if len(same_coordinates_df) > 0:
-                print(same_coordinates_df)
-                self.collisions = pd.concat([self.collisions, same_coordinates_df], ignore_index=True)
-                print("\n")
-
-        # Print the number of collisions
-        print(f"Total number of collisions: {sum(self.collision_count.values())}")
-        for key, value in self.collision_count.items():
-            if value > 0:
-                print(f"{value} occurances of {key} aircrafts collisions.")
-        
-        # Get the full trajectory of the colliding aircrafts
-        # We do that by creating a DataFrame with only rows for colliding aircrafts.
-        self.colliding_aircrafts_df = self.dataset_df[self.dataset_df['AircraftID'].isin(self.collisions['AircraftID'])]
-
-        # Export colliding_aircrafts_df to a text file
-        self.colliding_aircrafts_df.to_csv('colliding_aircrafts.txt', sep=' ', index=False)
-
-        # Plot trajectories
-        # self.mark_trajectories(self.colliding_aircrafts_df)
-
+    
 
     """
     This method marks the trajectories of the aircrafts in the area, 
