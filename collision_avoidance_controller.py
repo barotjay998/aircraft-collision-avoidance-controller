@@ -1,5 +1,6 @@
 # Import the necessary libraries
 import os
+import random
 import pandas as pd
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
@@ -99,16 +100,17 @@ class CollisionAvoidanceController:
 
         else:
             # Else, we move to the next step.
+
+            ### ITERATE UNTIL CONVERGANCE
             # Step 2: Set order : Give priority to the aircrafts.
             self.set_order()
 
-            # TODO: Step 3: Initialize airspace.
-            # TODO: Step 4: While not convergent, do iterations.
-            # TODO: Step 4.1: Calculate cost map.
-            self.calculate_cost_map()
+            # Step 3: Course correction
+            self.course_correction()
 
-            # TODO: Step 4.2: Shortest path.
-            # TODO: Step 4.3: Update trajectory.
+            # TODO: Step 4: Update trajectory.
+            ### CONVERGED
+
             # TODO: Step 5: Issue Advisories to the aircrafts.
 
         print("# Controller finished running")
@@ -153,9 +155,63 @@ class CollisionAvoidanceController:
 
     """
     This method calculates the cost map based on the collision risk of the aircrafts in the area
+    The approach involves updating the z-coordinate in the colliding_aircrafts_df's collision frame gradually from five 
+    frames before the collision. Starting from there, we incrementally adjust the z-coordinate by for example +0.0914 per frame. 
+    This ensures that by the collision frame, the z-coordinate reaches the advised Climb Level of +0.457. 
+    All these adjustments are made within the colliding_aircrafts_df DataFrame, as for this iteration only these trajectories 
+    need a course correction.
     """
-    def calculate_cost_map(self):
-        pass
+    def course_correction(self):
+        # Trajectory correction:
+        # Is based on vertical rate manipulation, we adjust our actions base on TCAS climb advisories SCL2500, CL2000, CL1500
+        # CL1000, CL500 (extra). In the vertical_rate_of_change we convert these in to km metric from ft metric, and assign
+        # a gradual rate of change as value.
+        vertical_rate_of_change = {0.7620: 0.1524, 0.6096: 0.12192, 0.4572: 0.0914, 0.3048: 0.06096, 0.1524: 0.03048}
+
+        # Used to make sure that consecutive aircrafts have different vertical rates,
+        # we initialize it with a SCL2500 value so that the first aircraft avoids 
+        # Strict Climb advisory (SCL).
+        antecedent_vertical_rate, vertical_rate = 0.7620, 0.7620
+
+        # We go through each aircraft which is colliding in order of priority assigned
+        # in the collisions_order DataFrame.
+        for index, collision_row in self.collisions_order.iterrows():
+            # Get AircraftID and Frame at which the collision is going to happen.
+            aircraft_id = collision_row['AircraftID']
+            collision_frame = collision_row['Frame']
+
+            # Filter colliding_aircrafts_df for the current AircraftID
+            aircraft_group = self.colliding_aircrafts_df[self.colliding_aircrafts_df['AircraftID'] == aircraft_id]
+
+            # Find the index for the collision frame in the colliding_aircrafts_df
+            collision_index = aircraft_group[aircraft_group['Frame'] == collision_frame].index
+            
+            # We to the course correction for each of the collision index of the colliding aircraft.
+            # This loop ensures course correction for multiple collisions of the same aircraft along its trajectory.
+            for collision_idx in collision_index:
+
+                # collision_index = collision_index.item()
+                print(f"Collision index: {collision_idx} for AircraftID: {aircraft_id}")
+
+                # Change vertical rate
+                while vertical_rate == antecedent_vertical_rate:
+                    vertical_rate = random.choice(list(vertical_rate_of_change.keys()))
+                vertical_rate_multiplier = vertical_rate_of_change[vertical_rate]
+
+                # This is used to update the z-coordinate gradually from five frames before 
+                # the collision frame to the collision frame.
+                multiplier = 6
+
+                # Iterate from five frames before the collision frame to the collision frame
+                for i in range(collision_idx - 5, collision_idx + 1):
+                    # Gradually update the z-coordinate
+                    multiplier -= 1
+                    update_value = vertical_rate - vertical_rate_multiplier * (multiplier)
+                    self.colliding_aircrafts_df.loc[i, 'z'] += update_value
+                    print(f"Updating the z-coordinate for index {i} to + {update_value}")
+
+                # Update antecedent_vertical_rate
+                antecedent_vertical_rate = vertical_rate
     
 
     """
@@ -186,11 +242,16 @@ class CollisionAvoidanceController:
                 print("------------------------------------------------------------------------------")
                 print("\n")
 
+        print("------------------------------------------------------------------------------")
+        print("# Collision Monitor Summary")
+        print("------------------------------------------------------------------------------")
         # Print the number of collisions
         print(f"Total number of collisions: {sum(self.collision_count.values())}")
         for key, value in self.collision_count.items():
             if value > 0:
                 print(f"{value} occurances of {key} aircrafts collisions.")
+        print("------------------------------------------------------------------------------")
+        print("\n")
         
         # Get the full trajectory of the colliding aircrafts
         # We do that by creating a DataFrame with only rows for colliding aircrafts.
