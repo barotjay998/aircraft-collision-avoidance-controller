@@ -68,6 +68,7 @@ class CollisionAvoidanceController:
         # Set the precision for rounding coordinates, for collision detection.
         self.precision = 2  # The following precision is set to 10 meters, so that we can detect collisions.
         self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0} # Dictionary to store the number of collisions for each frame.
+        self.iteration = 0 # Store the number of iterations the controller has run.
     
 
     def run_controller(self):
@@ -80,8 +81,6 @@ class CollisionAvoidanceController:
         print("Dataset rows: " + str(len(self.dataset_df)))
         print("Unique aircrafts: " + str(len(self.dataset_df['AircraftID'].unique())))
         print("------------------------------------------------------------------------------")
-        print("\n")
-        print("------------------------------------------------------------------------------")
         print("# Controller Data Area Info:")
         print("------------------------------------------------------------------------------")
         print("Plane data range: Along the runway: " + str(self.dataset_df['x'].min()) + " to " + str(self.dataset_df['x'].max()) + " km")
@@ -89,33 +88,57 @@ class CollisionAvoidanceController:
         print("System height data range: " + str(self.dataset_df['z'].min()) + " to " + str(self.dataset_df['z'].max()) + " km")
         print("------------------------------------------------------------------------------")
         print("\n")
+        
+        # Run the controller untill there are no collisions or if it is the first iteration.
+        while sum(self.collision_count.values()) > 0 or self.iteration == 0:
 
-        # TODO: Implement the algorithm here.
-        # Step 1: Collision detection
-        self.trajectory_collision_detection()
+            if self.iteration > 0:
+                # Reset the collision data, as we will now check for 
+                # collisions in the updated trajectories.
+                self.collisions = pd.DataFrame()
+                self.collisions_order = None
+                self.colliding_aircrafts_df = None
+                self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0}
 
-        # If there are no collisions, then we are done.
-        if len(self.collisions) == 0:
-            print("No collisions found")
+            # Step 1: Collision detection
+            print("------------------------------------------------------------------------------")
+            print(f"# Controller Iteration: {self.iteration + 1}")
+            print("------------------------------------------------------------------------------")
+            self.trajectory_collision_detection()
 
-        else:
-            # Else, we move to the next step.
+            # If there are no collisions, then we are done.
+            if sum(self.collision_count.values()) == 0:
+                print("------------------------------------------------------------------------------")
+                print("# No more collisions found: Course correction completed")
+                print("------------------------------------------------------------------------------")
+                break
 
-            ### ITERATE UNTIL CONVERGANCE
-            # Step 2: Set order : Give priority to the aircrafts.
-            self.set_order()
+            else:
+                # Step 2: Set order: Give priority to the colliding aircrafts.
+                self.set_order()
 
-            # Step 3: Course correction
-            self.course_correction()
+                # Step 3: Course correction: Correct the trajectories of the colliding aircrafts.
+                self.course_correction()
 
-            # TODO: Step 4: Update trajectory.
-            ### CONVERGED
-
-            # TODO: Step 5: Issue Advisories to the aircrafts.
+                # Step 4: Update the dataset
+                self.update_trajectory()
 
         print("# Controller finished running")
-    
+        
+    """
+    This method updates the dataset to contain only the data about the course corrected aircrafts,
+    for the next iteration and checking for collisions.
+    """
+    def update_trajectory(self):
+        print("# Updating trajectory data...")
+        print("------------------------------------------------------------------------------")
+        print("\n")
 
+        self.dataset_df = self.colliding_aircrafts_df
+
+        # Update the iteration number
+        self.iteration += 1
+    
     """
     In this method, we will assign priorities to the aircrafts that are going to collide
     # Determine the number of frames aircrafts have to travel to reach the collision point:
@@ -125,7 +148,8 @@ class CollisionAvoidanceController:
     # 4. Create a new dataframe with "Order" column similar to self.collision data.
     """
     def set_order(self):
-        print("Setting order")
+        print("------------------------------------------------------------------------------")
+        print("# Setting priority order...")
         
         # Check if collisions DataFrame is not empty
         if not self.collisions.empty:
@@ -149,7 +173,6 @@ class CollisionAvoidanceController:
                 # Update the 'Order' column in collisions_order DataFrame
                 self.collisions_order.loc[index, 'Order'] = frames_to_collision
         
-        # Print the collisions_order DataFrame
         self.collisions_order = self.collisions_order.sort_values(by='Order')
 
 
@@ -162,6 +185,10 @@ class CollisionAvoidanceController:
     need a course correction.
     """
     def course_correction(self):
+        print("------------------------------------------------------------------------------")
+        print("# Trajectory correction...")
+        print("------------------------------------------------------------------------------")
+
         # Trajectory correction:
         # Is based on vertical rate manipulation, we adjust our actions base on TCAS climb advisories SCL2500, CL2000, CL1500
         # CL1000, CL500 (extra). In the vertical_rate_of_change we convert these in to km metric from ft metric, and assign
@@ -191,7 +218,7 @@ class CollisionAvoidanceController:
             for collision_idx in collision_index:
 
                 # collision_index = collision_index.item()
-                print(f"Collision index: {collision_idx} for AircraftID: {aircraft_id}")
+                # print(f"Collision index: {collision_idx} for AircraftID: {aircraft_id}")
 
                 # Change vertical rate
                 while vertical_rate == antecedent_vertical_rate:
@@ -208,7 +235,7 @@ class CollisionAvoidanceController:
                     multiplier -= 1
                     update_value = vertical_rate - vertical_rate_multiplier * (multiplier)
                     self.colliding_aircrafts_df.loc[i, 'z'] += update_value
-                    print(f"Updating the z-coordinate for index {i} to + {update_value}")
+                    # print(f"Updating the z-coordinate for index {i} to + {update_value}")
 
                 # Update antecedent_vertical_rate
                 antecedent_vertical_rate = vertical_rate
@@ -240,22 +267,21 @@ class CollisionAvoidanceController:
                 print(same_coordinates_df)
                 self.collisions = pd.concat([self.collisions, same_coordinates_df], ignore_index=True)
                 print("------------------------------------------------------------------------------")
-                print("\n")
 
-        print("------------------------------------------------------------------------------")
-        print("# Collision Monitor Summary")
-        print("------------------------------------------------------------------------------")
-        # Print the number of collisions
-        print(f"Total number of collisions: {sum(self.collision_count.values())}")
-        for key, value in self.collision_count.items():
-            if value > 0:
-                print(f"{value} occurances of {key} aircrafts collisions.")
-        print("------------------------------------------------------------------------------")
-        print("\n")
-        
-        # Get the full trajectory of the colliding aircrafts
-        # We do that by creating a DataFrame with only rows for colliding aircrafts.
-        self.colliding_aircrafts_df = self.dataset_df[self.dataset_df['AircraftID'].isin(self.collisions['AircraftID'])]
+        if not self.collisions.empty:
+            print("# Collision Monitor Summary")
+            print("------------------------------------------------------------------------------")
+            # Print the number of collisions
+            print(f"Total number of collisions: {sum(self.collision_count.values())}")
+            for key, value in self.collision_count.items():
+                if value > 0:
+                    print(f"{value} occurances of {key} aircrafts collisions.")
+            print("------------------------------------------------------------------------------")
+            print("\n")
+            
+            # Get the full trajectory of the colliding aircrafts if there are any.
+            # We do that by creating a DataFrame with only rows for colliding aircrafts.
+            self.colliding_aircrafts_df = self.dataset_df[self.dataset_df['AircraftID'].isin(self.collisions['AircraftID'])]
 
         # Export colliding_aircrafts_df to a text file
         # self.colliding_aircrafts_df.to_csv('colliding_aircrafts.txt', sep=' ', index=False)
