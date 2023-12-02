@@ -74,6 +74,9 @@ class CollisionAvoidanceController:
         # print(self.dataset_df.head())
         print("Number of dataset rows: " + str(len(self.dataset_df)))
         print("Number of unique aircrafts: " + str(len(self.dataset_df['AircraftID'].unique())))
+        print("System area covered - Plane: Along the runway: " + str(self.dataset_df['x'].min()) + " to " + str(self.dataset_df['x'].max()) + " km")
+        print("System area covered - Plane: Perpendicular to the runway: " + str(self.dataset_df['y'].min()) + " to " + str(self.dataset_df['y'].max()) + " km")
+        print("System area covered - Height: " + str(self.dataset_df['z'].min()) + " to " + str(self.dataset_df['z'].max()) + " km")
 
         # TODO: Implement the algorithm here.
         # Step 1: Collision detection
