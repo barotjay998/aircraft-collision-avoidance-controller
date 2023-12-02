@@ -102,17 +102,14 @@ class CollisionAvoidanceController:
 
     """
     In this method, we will assign priorities to the aircrafts that are going to collide
+    # Determine the number of frames aircrafts have to travel to reach the collision point:
+    # 1. Extract AircraftID from each row in self.collision data.
+    # 2. Find the lowest Frame number in self.colliding_aircrafts_df.
+    # 3. Subtract the Frame number of self.collision data from the lowest Frame number.
+    # 4. Create a new dataframe with "Order" column similar to self.collision data.
     """
     def set_order(self):
         print("Setting order")
-
-        # For each row of self.collision data the Frame is the point at which the aircrafts are going to collide,
-        # so we take the AircraftID from this row of self.collision data, and 
-        # we will find the lowest Frame number in the self.colliding_aircrafts_df. Then we will subtract the Frame number
-        # of the self.collision data from the lowest Frame number in the self.colliding_aircrafts_df, and we will get the
-        # number of frames that the aircrafts have to travel to reach the point of collision.
-        # We will create a new column in the self.collision data called "Order" and we will store the number of frames
-        # in this column.
         
         # Check if collisions DataFrame is not empty
         if not self.collisions.empty:
