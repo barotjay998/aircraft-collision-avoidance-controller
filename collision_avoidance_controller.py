@@ -85,7 +85,7 @@ class CollisionAvoidanceController:
 
         else:
             # Else, we move to the next step.
-            # TODO: Step 2: Set order : Give priority to the aircrafts.
+            # Step 2: Set order : Give priority to the aircrafts.
             self.set_order()
 
             # TODO: Step 3: Initialize airspace.
@@ -243,9 +243,9 @@ class CollisionAvoidanceController:
             ax.plot(aircraft_data['x'], aircraft_data['y'], aircraft_data['z'], label=f'Aircraft {int(aircraft_id)}')
 
         # Set labels and title
-        ax.set_xlabel('X Coordinate')
-        ax.set_ylabel('Y Coordinate')
-        ax.set_zlabel('Z Coordinate (Height)')
+        ax.set_xlabel('X (in km)')
+        ax.set_ylabel('Y (in km)')
+        ax.set_zlabel('Z (in km) (Height)')
         ax.set_title('Aircraft Trajectories')
 
         # Get the maximum absolute values for x and y coordinates
@@ -286,8 +286,8 @@ class CollisionAvoidanceController:
             )
 
         # Set labels and title
-        ax.set_xlabel('X Coordinate')
-        ax.set_ylabel('Y Coordinate')
+        ax.set_xlabel('X (in km)')
+        ax.set_ylabel('Y (in km)')
         ax.set_title('Aircraft Trajectories in 2D with Z-coordinate (Height) Color')
 
         max_abs_x = max(abs(coord) for coord in ax.get_xlim())
