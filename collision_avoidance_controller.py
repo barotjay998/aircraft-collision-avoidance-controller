@@ -64,7 +64,8 @@ class CollisionAvoidanceController:
         self.colliding_aircrafts_df = None # Store the trajectories of the colliding aircrafts.
         self.collisions = pd.DataFrame() # Store the collisions data, only consist of points of collision not the whole trajectory.
         self.collisions_order = None # Store the order of the aircrafts that are going to collide.
-        self.precision = 2  # Set the precision for rounding coordinates, for collision detection.
+        # Set the precision for rounding coordinates, for collision detection.
+        self.precision = 2  # The following precision is set to 10 meters, so that we can detect collisions.
         self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0} # Dictionary to store the number of collisions for each frame.
     
 
@@ -72,11 +73,21 @@ class CollisionAvoidanceController:
         print("# Running controller")
 
         # print(self.dataset_df.head())
-        print("Number of dataset rows: " + str(len(self.dataset_df)))
-        print("Number of unique aircrafts: " + str(len(self.dataset_df['AircraftID'].unique())))
-        print("System area covered - Plane: Along the runway: " + str(self.dataset_df['x'].min()) + " to " + str(self.dataset_df['x'].max()) + " km")
-        print("System area covered - Plane: Perpendicular to the runway: " + str(self.dataset_df['y'].min()) + " to " + str(self.dataset_df['y'].max()) + " km")
-        print("System area covered - Height: " + str(self.dataset_df['z'].min()) + " to " + str(self.dataset_df['z'].max()) + " km")
+        print("------------------------------------------------------------------------------")
+        print("# ADS-B Controller Receiver Data Info:")
+        print("------------------------------------------------------------------------------")
+        print("Dataset rows: " + str(len(self.dataset_df)))
+        print("Unique aircrafts: " + str(len(self.dataset_df['AircraftID'].unique())))
+        print("------------------------------------------------------------------------------")
+        print("\n")
+        print("------------------------------------------------------------------------------")
+        print("# Controller Data Area Info:")
+        print("------------------------------------------------------------------------------")
+        print("Plane data range: Along the runway: " + str(self.dataset_df['x'].min()) + " to " + str(self.dataset_df['x'].max()) + " km")
+        print("Plane data range: Perpendicular to the runway: " + str(self.dataset_df['y'].min()) + " to " + str(self.dataset_df['y'].max()) + " km")
+        print("System height data range: " + str(self.dataset_df['z'].min()) + " to " + str(self.dataset_df['z'].max()) + " km")
+        print("------------------------------------------------------------------------------")
+        print("\n")
 
         # TODO: Implement the algorithm here.
         # Step 1: Collision detection
@@ -156,21 +167,25 @@ class CollisionAvoidanceController:
         # Plot trajectories
         # self.mark_trajectories(self.dataset_df)
 
-        print("Finding collisions")
         # Group data for each unique combination of Frames
         grouped_data = self.dataset_df.groupby(['Frame'])
 
+        print("------------------------------------------------------------------------------")
+        print("# Monitoring Collisions")
+        print("------------------------------------------------------------------------------")
         # Iterate over each unique combination of Frames, and then
         for frame, group_df in grouped_data:
             # print(group_df)
             # Find aircrafts with the same x, y, and z coordinates within the same frame
             same_coordinates_df = self.find_same_coordinates(group_df)
-
             # Add the found collisions to the collisions DataFrame if there are any
             if len(same_coordinates_df) > 0:
+                print(f"Collision # {sum(self.collision_count.values())}")
                 print(same_coordinates_df)
                 self.collisions = pd.concat([self.collisions, same_coordinates_df], ignore_index=True)
+                print("------------------------------------------------------------------------------")
                 print("\n")
+                break
 
         # Print the number of collisions
         print(f"Total number of collisions: {sum(self.collision_count.values())}")
