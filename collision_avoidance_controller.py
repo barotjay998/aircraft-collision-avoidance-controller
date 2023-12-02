@@ -63,6 +63,7 @@ class CollisionAvoidanceController:
         self.dataset_df = dataset_df
         self.colliding_aircrafts_df = None # Store the trajectories of the colliding aircrafts.
         self.collisions = pd.DataFrame()
+        self.collisions_order = None # Store the order of the aircrafts that are going to collide.
         self.precision = 2  # Set the precision for rounding coordinates, for collision detection.
         self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0} # Dictionary to store the number of collisions for each frame.
     
@@ -79,18 +80,64 @@ class CollisionAvoidanceController:
         self.trajectory_collision_detection()
 
         # If there are no collisions, then we are done.
-        # Else, we move to the next step.
-        # TODO: Step 2: Set order : Give priority to the aircrafts.
-        # TODO: Step 3: Initialize airspace.
-        # TODO: Step 4: While not convergent, do iterations.
-        # TODO: Step 4.1: Calculate cost map.
-        self.calculate_cost_map()
+        if len(self.collisions) == 0:
+            print("No collisions found")
 
-        # TODO: Step 4.2: Shortest path.
-        # TODO: Step 4.3: Update trajectory.
-        # TODO: Step 5: Issue Advisories to the aircrafts.
+        else:
+            # Else, we move to the next step.
+            # TODO: Step 2: Set order : Give priority to the aircrafts.
+            self.set_order()
+
+            # TODO: Step 3: Initialize airspace.
+            # TODO: Step 4: While not convergent, do iterations.
+            # TODO: Step 4.1: Calculate cost map.
+            self.calculate_cost_map()
+
+            # TODO: Step 4.2: Shortest path.
+            # TODO: Step 4.3: Update trajectory.
+            # TODO: Step 5: Issue Advisories to the aircrafts.
 
         print("# Controller finished running")
+    
+
+    """
+    In this method, we will assign priorities to the aircrafts that are going to collide
+    """
+    def set_order(self):
+        print("Setting order")
+
+        # For each row of self.collision data the Frame is the point at which the aircrafts are going to collide,
+        # so we take the AircraftID from this row of self.collision data, and 
+        # we will find the lowest Frame number in the self.colliding_aircrafts_df. Then we will subtract the Frame number
+        # of the self.collision data from the lowest Frame number in the self.colliding_aircrafts_df, and we will get the
+        # number of frames that the aircrafts have to travel to reach the point of collision.
+        # We will create a new column in the self.collision data called "Order" and we will store the number of frames
+        # in this column.
+        
+        # Check if collisions DataFrame is not empty
+        if not self.collisions.empty:
+            # Create a new DataFrame to store collisions with 'Order' column
+            self.collisions_order = self.collisions.copy()
+
+            for index, collision_row in self.collisions_order.iterrows():
+                # Get AircraftID and Frame from the collision row
+                aircraft_id = collision_row['AircraftID']
+                collision_frame = collision_row['Frame']
+
+                # Filter colliding_aircrafts_df for the current AircraftID
+                aircraft_group = self.colliding_aircrafts_df[self.colliding_aircrafts_df['AircraftID'] == aircraft_id]
+
+                # Find the lowest Frame number in colliding_aircrafts_df
+                lowest_frame = aircraft_group['Frame'].min()
+
+                # Calculate the number of frames to reach the point of collision
+                frames_to_collision = collision_frame - lowest_frame
+
+                # Update the 'Order' column in collisions_order DataFrame
+                self.collisions_order.loc[index, 'Order'] = frames_to_collision
+        
+        # Print the collisions_order DataFrame
+        self.collisions_order = self.collisions_order.sort_values(by='Order')
 
 
     """
@@ -105,7 +152,7 @@ class CollisionAvoidanceController:
     Logic: If two aircrafts have the same coordinates in the same frame, then they are in collision.
     """
     def trajectory_collision_detection(self):
-        
+
         # Plot trajectories
         # self.mark_trajectories(self.dataset_df)
 
