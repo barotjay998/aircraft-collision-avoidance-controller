@@ -61,44 +61,121 @@ class CollisionAvoidanceController:
     """
     def __init__(self, dataset_df):
         self.dataset_df = dataset_df
+        self.collisions = pd.DataFrame()
+        self.precision = 2  # Set the precision for rounding coordinates, for collision detection.
+        self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0} # Dictionary to store the number of collisions for each frame.
     
     def run_controller(self):
-        print("Running controller...")
+        print("# Running controller")
 
         # print(self.dataset_df.head())
+        print("Number of dataset rows: " + str(len(self.dataset_df)))
+        print("Number of unique aircrafts: " + str(len(self.dataset_df['AircraftID'].unique())))
 
         # TODO: Implement the algorithm here.
-        #
         # TODO: Step 1: COLLISIONDETECTION - Collision Risk-Based Cost Map.
         self.calculate_cost_map()
 
-        print("Controller finished running.")
+        print("# Controller finished running")
     
 
     """
-    This method calculates the cost map based on the collision risk of the aircrafts in the area,
-    the first step to do this is to mark the trajectories of each aircraft in the area, based upon the 
-    points of traversal of each aircraft.
+    This method takes a group of aircrafts that exist in the same frame, and finds out which of them
+    have thet same coordinates around some precision, and returns a dataframe containing the aircrafts.
+
+    :param group_df: The dataframe containing the aircrafts in the same frame.
+    :type group_df: pandas.DataFrame
+    """
+    def find_same_coordinates(self, group_df):
+        # Round the coordinates to the specified precision for checking duplicates
+        group_df_rounded = group_df.round({'x': self.precision, 'y': self.precision, 'z': self.precision})
+
+        # Find rows with the same rounded coordinates within the group
+        same_coordinates_df = group_df[group_df_rounded.duplicated(['x', 'y', 'z'], keep=False)]
+
+        # Drop duplicate rows based on AircraftID
+        # LOGIC: If there are same coordinates for same aircraft, then it is not a collision, the
+        # aircraft is just hovering in the same place.
+        same_coordinates_df = same_coordinates_df.drop_duplicates(subset=['AircraftID'])
+
+        # Update collison count, if we found any collisions.
+        if len(same_coordinates_df) > 1:
+            # We update the collsion count based on the number of aircrafts in collision.
+            self.collision_count[len(same_coordinates_df)] += 1
+            return same_coordinates_df
+
+        else:
+            # No collisions found
+            return pd.DataFrame()
+        
+
+    """
+    This method calculates the cost map based on the collision risk of the aircrafts in the area
     """
     def calculate_cost_map(self):
-    
-        self.mark_trajectories()
-    
-    
-    def mark_trajectories(self):
-        self.plot_trajectories_3d()
-        self.plot_trajectories_2d()
+        
+        # Plot trajectories
+        # self.mark_trajectories(self.dataset_df)
+
+        # Finding collisions
+        print("\n")
+        print("Finding collisions")
+        # Group data for each unique combination of Frames
+        grouped_data = self.dataset_df.groupby(['Frame'])
+
+        # Iterate over each unique combination of Frames, and then
+        # find aircrafts with the same coordinates within the same Frame group.
+        # LOGIC: If two aircrafts have the same coordinates in the same frame, then they are in collision. 
+        for frame, group_df in grouped_data:
+            # print(group_df)
+            # Find aircrafts with the same x, y, and z coordinates within the same frame
+            same_coordinates_df = self.find_same_coordinates(group_df)
+
+            # Add the found collisions to the collisions DataFrame if there are any
+            if len(same_coordinates_df) > 0:
+                print(same_coordinates_df)
+                self.collisions = pd.concat([self.collisions, same_coordinates_df], ignore_index=True)
+                print("\n")
+
+        # Print the number of collisions
+        print(f"Total number of collisions: {sum(self.collision_count.values())}")
+        for key, value in self.collision_count.items():
+            if value > 0:
+                print(f"{value} occurances of {key} aircrafts collisions.")
+        
+        # Get the full trajectory of the colliding aircrafts
+        # We do that by creating a DataFrame with only rows for colliding aircrafts.
+        self.colliding_aircrafts_df = self.dataset_df[self.dataset_df['AircraftID'].isin(self.collisions['AircraftID'])]
+
+        # Export colliding_aircrafts_df to a text file
+        self.colliding_aircrafts_df.to_csv('colliding_aircrafts.txt', sep=' ', index=False)
+
+        # Plot trajectories
+        # self.mark_trajectories(self.colliding_aircrafts_df)
 
 
-    def plot_trajectories_3d(self):
+    """
+    This method marks the trajectories of the aircrafts in the area, 
+    by plotting them in a 3D plot and a 2D plot.
+    """
+    def mark_trajectories(self, trajectory_df):
+        print("Plotting trajectories")
+        self.plot_trajectories_3d(trajectory_df)
+        self.plot_trajectories_2d(trajectory_df)
+
+
+    """
+    This method plots the trajectories of the aircrafts in the area in a 3D plot.
+    """
+    def plot_trajectories_3d(self, trajectory_df):
         # Create a 3D plot
         fig = plt.figure()
         ax = fig.add_subplot(111, projection='3d')
 
         # Iterate over each unique AircraftID
-        for aircraft_id in self.dataset_df['AircraftID'].unique():
+        for aircraft_id in trajectory_df['AircraftID'].unique():
             # Filter data for the current aircraft
-            aircraft_data = self.dataset_df[self.dataset_df['AircraftID'] == aircraft_id]
+            aircraft_data = trajectory_df[trajectory_df['AircraftID'] == aircraft_id]
 
             # Plot trajectory
             ax.plot(aircraft_data['x'], aircraft_data['y'], aircraft_data['z'], label=f'Aircraft {int(aircraft_id)}')
@@ -124,14 +201,17 @@ class CollisionAvoidanceController:
         plt.show()
     
 
-    def plot_trajectories_2d(self):
+    """
+    This method plots the trajectories of the aircrafts in the area in a 2D plot.
+    """
+    def plot_trajectories_2d(self, trajectory_df):
         # Create a 2D plot
         ax = plt.subplot(122)
 
         # Iterate over each unique AircraftID
-        for aircraft_id in self.dataset_df['AircraftID'].unique():
+        for aircraft_id in trajectory_df['AircraftID'].unique():
             # Filter data for the current aircraft
-            aircraft_data = self.dataset_df[self.dataset_df['AircraftID'] == aircraft_id]
+            aircraft_data = trajectory_df[trajectory_df['AircraftID'] == aircraft_id]
 
             # Scatter plot with color representing height
             scatter = ax.scatter(
