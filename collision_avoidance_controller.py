@@ -152,21 +152,6 @@ class CollisionAvoidanceController:
         # Return course corrected trajectories
         return self.dataset_df
         
-        
-    """
-    This method updates the dataset to contain only the data about the course corrected aircrafts,
-    for the next iteration and checking for collisions.
-    """
-    def update_trajectory(self):
-        print("# Updating trajectory data...")
-        print("------------------------------------------------------------------------------")
-        print("\n")
-
-        self.dataset_df = self.colliding_aircrafts_df
-
-        # Update the iteration number
-        self.iteration += 1
-    
     """
     In this method, we will assign priorities to the aircrafts that are going to collide
     # Determine the number of frames aircrafts have to travel to reach the collision point:
@@ -204,6 +189,21 @@ class CollisionAvoidanceController:
         self.collisions_order = self.collisions_order.sort_values(by='Order')
 
 
+    """
+    This method updates the dataset to contain only the data about the course corrected aircrafts,
+    for the next iteration and checking for collisions.
+    """
+    def update_trajectory(self):
+        print("# Updating trajectory data...")
+        print("------------------------------------------------------------------------------")
+        print("\n")
+
+        self.dataset_df = self.colliding_aircrafts_df
+
+        # Update the iteration number
+        self.iteration += 1
+    
+        return
     """
     This method calculates the cost map based on the collision risk of the aircrafts in the area
     The approach involves updating the z-coordinate in the colliding_aircrafts_df's collision frame gradually from five 
