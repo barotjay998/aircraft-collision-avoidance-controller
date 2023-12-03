@@ -1,3 +1,15 @@
+###############################################
+#
+# Authors: Jay Barot, Adit Negi
+# Vanderbilt School of Engineering
+# Vanderbilt University
+# CS6376: Hybrid and Embedded Systems
+# Purpose: Aircraft Collision Avoidance Controller  
+# Created: Fall 2023
+#
+###############################################
+
+
 # Import the necessary libraries
 import os
 import random
@@ -7,6 +19,7 @@ from mpl_toolkits.mplot3d import Axes3D
 
 
 """
+DatasetReader class
 Provides methods to read and preprocess the aircraft data.
 """
 class DatasetReader:
@@ -51,6 +64,11 @@ class DatasetReader:
             return None
 
 
+
+"""
+CollisionAvoidanceController class
+Provides methods to detect collisions and correct the trajectories of the aircrafts.
+"""
 class CollisionAvoidanceController:
 
     """
@@ -73,6 +91,9 @@ class CollisionAvoidanceController:
         self.convergence_time = 0
     
 
+    """
+    The following the main driver function for the controller.
+    """
     def run_controller(self):
         print("# Running controller")
 
@@ -124,8 +145,12 @@ class CollisionAvoidanceController:
 
                 # Step 4: Update the dataset
                 self.update_trajectory()
-
+        
         print("# Controller finished running")
+
+        # Return course corrected trajectories
+        return self.dataset_df
+        
         
     """
     This method updates the dataset to contain only the data about the course corrected aircrafts,
@@ -231,13 +256,22 @@ class CollisionAvoidanceController:
                 # the collision frame to the collision frame.
                 multiplier = 6
 
-                # Iterate from five frames before the collision frame to the collision frame
                 for i in range(collision_idx - 5, collision_idx + 1):
-                    # Gradually update the z-coordinate
-                    multiplier -= 1
-                    update_value = vertical_rate - vertical_rate_multiplier * (multiplier)
-                    self.colliding_aircrafts_df.loc[i, 'z'] += update_value
-                    # print(f"Updating the z-coordinate for index {i} to + {update_value}")
+                    try:
+                        # Gradually update the z-coordinate
+                        multiplier -= 1
+                        update_value = vertical_rate - vertical_rate_multiplier * multiplier
+                        # print(f"Updating the z-coordinate for index {i} to + {update_value}")
+                        self.colliding_aircrafts_df.loc[i, 'z'] += update_value
+
+                    except KeyError:
+                        """
+                        We address some dataset inconsistencies by skipping the frame if we encounter any key 
+                        erros. This also ensures that our controller doesnt crash and can continute to recommend
+                        corrected trajectories.
+                        """
+                        # print(f"Key not found for index {i}. Skipping rate manipulation for this iteration.")
+                        continue
 
                 # Update antecedent_vertical_rate
                 antecedent_vertical_rate = vertical_rate
@@ -286,7 +320,8 @@ class CollisionAvoidanceController:
             self.colliding_aircrafts_df = self.dataset_df[self.dataset_df['AircraftID'].isin(self.collisions['AircraftID'])]
 
         # Export colliding_aircrafts_df to a text file
-        # self.colliding_aircrafts_df.to_csv('colliding_aircrafts.txt', sep=' ', index=False)
+        # self.colliding_aircrafts_df.to_csv('colliding_aircrafts.txt', sep=' ', index=False, header=False)
+
 
         # Plot trajectories
         # self.mark_trajectories(self.colliding_aircrafts_df)

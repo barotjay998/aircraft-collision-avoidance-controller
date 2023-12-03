@@ -3,7 +3,7 @@ from collision_avoidance_controller import DatasetReader, CollisionAvoidanceCont
 def main():
 
     # Specify the path to the dataset file
-    dataset_file_path = 'dataset/colliding_aircrafts/ten/' # OG dataset.
+    dataset_file_path = 'dataset/combined_processed_data/' # OG dataset.
     # dataset_file_path = 'data_read_test_sample.txt'
 
     # Create an instance of DatasetReader
@@ -17,7 +17,11 @@ def main():
         controller = CollisionAvoidanceController(dataset_df)
 
         # Run the controller
-        controller.run_controller()
+        correction_df = controller.run_controller()
+    
+    # Save the correction DataFrame to a file
+    correction_df.to_csv('output_correction.txt', sep=' ', index=False, header=False)
+
 
 if __name__ == "__main__":
     main()
