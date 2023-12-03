@@ -443,4 +443,12 @@ class CollisionAvoidanceController:
                    dist[v] > dist[u] + self.graph[u][v]):
                     dist[v] = dist[u] + self.graph[u][v]
  
-        self.printSolution(dist)
+        return sptSet
+
+    def get_paths(self):
+        paths = self.dijkstra(1)
+        for path in paths:
+            if path:
+                print("no collision on this path")
+        
+        return
