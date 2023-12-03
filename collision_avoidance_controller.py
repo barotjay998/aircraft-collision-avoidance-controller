@@ -20,6 +20,7 @@ class DatasetReader:
     """
     def __init__(self, folder_path):
         self.folder_path = folder_path
+        self.dataframe_list = []
 
     def read_dataset(self):
         try:
@@ -69,6 +70,7 @@ class CollisionAvoidanceController:
         self.precision = 2  # The following precision is set to 10 meters, so that we can detect collisions.
         self.collision_count = {2: 0, 3: 0, 4: 0, 5: 0, 6: 0, 7: 0} # Dictionary to store the number of collisions for each frame.
         self.iteration = 0 # Store the number of iterations the controller has run.
+        self.convergence_time = 0
     
 
     def run_controller(self):
@@ -303,7 +305,8 @@ class CollisionAvoidanceController:
 
         # Find rows with the same rounded coordinates within the group
         same_coordinates_df = group_df[group_df_rounded.duplicated(['x', 'y', 'z'], keep=False)]
-
+        cord_df_modified = group_df[group_df_rounded.duplicated(['x', 'y', 'z'], keep=False)]
+        #modify the df
         # Drop duplicate rows based on AircraftID
         # LOGIC: If there are same coordinates for same aircraft, then it is not a collision, the
         # aircraft is just hovering in the same place.
@@ -410,3 +413,34 @@ class CollisionAvoidanceController:
 
         # Show the plot
         plt.show()
+
+    
+    """Shortest path for converging"""
+    def dijkstra(self, src):
+ 
+        dist = [1e7] * self.V
+        dist[src] = 0
+        sptSet = [False] * self.V
+ 
+        for cout in range(self.V):
+ 
+            # Pick the minimum distance vertex from
+            # the set of vertices not yet processed.
+            # u is always equal to src in first iteration
+            u = self.minDistance(dist, sptSet)
+ 
+            # Put the minimum distance vertex in the
+            # shortest path tree
+            sptSet[u] = True
+ 
+            # Update dist value of the adjacent vertices
+            # of the picked vertex only if the current
+            # distance is greater than new distance and
+            # the vertex in not in the shortest path tree
+            for v in range(self.V):
+                if (self.graph[u][v] > 0 and
+                   sptSet[v] == False and
+                   dist[v] > dist[u] + self.graph[u][v]):
+                    dist[v] = dist[u] + self.graph[u][v]
+ 
+        self.printSolution(dist)
