@@ -19,6 +19,8 @@ def calculate_cost(deviation):
     return deviation//100
 
 import heapq
+from math import sqrt
+from scipy.stats import norm
 
 def dijkstra(graph, start):
     distances = {node: float('infinity') for node in graph.nodes}
@@ -47,6 +49,19 @@ def calculate_deviations(collision):
 
 def get_potential_collisions():
     return []
+
+sigma1 = 0.3
+sigma2 = 0.2
+# Parameters for the relative position normal distribution
+mu_r = 0  # for simplicity, assuming the expected paths cross
+sigma_r = sqrt(sigma1**2 + sigma2**2)  # assuming independence
+
+# Collision radius
+R = 100  # the defined minimum separation distance
+
+# Calculate the collision probability
+collision_probability = 2 * norm.cdf(R, mu_r, sigma_r) - 1
+
 
 # Main Function
 def main():
