@@ -102,7 +102,7 @@ Watch a demonstration of the Aircraft Collision Avoidance System on [YouTube](ht
 
 ## Project Presentation
 
-For Project presentation slides refer to [PDF](project_presentation.pdf) format.
+For Project presentation refer to [Slides](project_presentation.pdf).
 
 ## License
 
