@@ -3,11 +3,11 @@ from collision_avoidance_controller import DatasetReader, CollisionAvoidanceCont
 def main():
 
     # Specify the path to the dataset file
-    dataset_file_path = 'dataset/combined_processed_data/' # OG dataset.
+    dataset_path = 'dataset/combined_processed_data/' # OG dataset.
     # dataset_file_path = 'data_read_test_sample.txt'
 
     # Create an instance of DatasetReader
-    dataset_reader = DatasetReader(dataset_file_path)
+    dataset_reader = DatasetReader(dataset_path)
 
     # Read the data and get the DataFrame
     dataset_df = dataset_reader.read_dataset()
