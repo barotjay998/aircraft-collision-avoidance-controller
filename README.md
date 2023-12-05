@@ -14,6 +14,8 @@ Aircraft Collision Avoidance System is an advanced Python implementation for the
   - [Monitoring the Controller](#monitoring-the-controller)
 - [Testing](#testing)
 - [Visualization](#visualization)
+  - [Demo Video](#demo-video)
+  - [Screenshots](#screenshots)
 - [License](#license)
 
 ## Overview
@@ -90,7 +92,17 @@ For testing purposes, two sample dataset files are provided:
 
 ## Visualization
 
-To visualize trajectories at various stages of the algorithm, use the `mark_trajectories()` method of the controller. This can provide useful insights into the collision avoidance process.
+### Demo Video
+
+Watch a demonstration of the Aircraft Collision Avoidance System on [YouTube](https://youtu.be/RvGEqUJp-sI).
+
+### Screenshots
+
+![Collision Avoidance Visualization](sample_collision_avoidance_by_controller.png)
+
+## Project Presentation
+
+For Project presentation slides refer to [PDF](project_presentation.pdf) format.
 
 ## License
 
