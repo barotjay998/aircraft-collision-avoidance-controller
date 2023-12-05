@@ -1,7 +1,109 @@
-# aircraft-collision-avoidance-controller
-Aircraft Collision Avoidance Controller, CS 6376-01 Project: Hybrid and Embedded Systems\
+# Aircraft Collision Avoidance System
 
-Objectives 
-In this project we will create a computer-based simulation of an aircraft collision avoidance system using the python programming language. The primary objective of this project is to develop a controller for aircraft that can guide them safely from their starting point to their intended destination while simultaneously preventing any collisions with other aircraft along their flight path. 
-The controller is equipped with the ability to gather information about the current position of the aircraft as well as the location it needs to reach. Additionally, it receives real-time messages from nearby aircraft, which provide crucial data for guiding the aircraft and ensuring they steer clear of any potential collisions with other aircraft. This project focuses on the implementation of a simplified centralized controller, operating in a three-dimensional space, which is responsible for the vital task of preventing aircraft from coming into contact with one another during their respective journeys.
+Aircraft Collision Avoidance System is an advanced Python implementation for the real-time avoidance of collisions among multiple aircraft, employing an autonomous dependent surveillance-broadcast (ADS-B) system. The core aim is to utilize satellite-based navigation technology to address identified shortcomings in the existing Traffic Collision Avoidance System (TCAS). The system is designed to process trajectory data, identify potential collisions, and generate advisories to prevent accidents in air travel. 
 
+## Table of Contents
+
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage](#usage)
+  - [Dataset](#dataset)
+  - [Running the Code](#running-the-code)
+  - [Monitoring the Controller](#monitoring-the-controller)
+- [Testing](#testing)
+- [Visualization](#visualization)
+  - [Demo Video](#demo-video)
+  - [Screenshots](#screenshots)
+- [License](#license)
+
+## Overview
+
+Aircraft Collision Avoidance System is designed to process trajectory data, identify potential collisions, and generate advisories to prevent accidents in air travel.
+
+## Getting Started
+
+### Prerequisites
+
+Before running the Aircraft Collision Avoidance System, ensure that you have the following prerequisites installed:
+
+- Python 3.x
+- Pip (Python package installer)
+
+### Installation
+
+1. Clone the repository to your local machine:
+
+    ```bash
+    git clone https://github.com/barotjay998/aircraft-collision-avoidance-controller.git
+    ```
+
+2. Navigate to the project directory:
+
+    ```bash
+    cd aircraft-collision-avoidance-contoller
+    ```
+
+3. Install the required dependencies using the provided `requirements.txt` file:
+
+    ```bash
+    pip install -r requirements.txt
+    ```
+
+## Usage
+
+### Dataset
+
+To use the Aircraft Collision Avoidance System with your own ADS-B formatted trajectory data, follow these steps:
+
+1. Obtain ADS-B formatted trajectory data or download a sample dataset from [TrajAir](https://theairlab.org/trajair/).
+
+2. Place the dataset files in a folder of your choice.
+
+### Running the Code
+
+1. Open the `main.py` file in a text editor.
+
+2. Specify the path to your dataset folder:
+
+    ```python
+    dataset_path = "path/to/your/dataset"
+    ```
+
+3. Save the `main.py` file.
+
+4. Execute the `main.py` file:
+
+    ```bash
+    python main.py
+    ```
+
+### Monitoring the Controller
+
+The controller's execution can be monitored on the command line. Once the execution is complete, an advisory file will be generated.
+
+## Testing
+
+For testing purposes, two sample dataset files are provided:
+
+- `2_colliding_aircrafts_data.txt`: An instance where the collision of two aircraft is captured.
+- `7d1_colliding_aircrafts_data.txt`: Data collected over a week containing multiple possible collisions.
+
+## Visualization
+
+### Demo Video
+
+Watch a demonstration of the Aircraft Collision Avoidance System on [YouTube](https://youtu.be/RvGEqUJp-sI).
+
+### Screenshots
+
+![Collision Avoidance Visualization](sample_collision_avoidance_by_controller.png)
+
+## Project Presentation
+
+For Project presentation refer to [Slides](project_presentation.pdf).
+
+## License
+
+This project is licensed under the [MIT License](LICENSE).
